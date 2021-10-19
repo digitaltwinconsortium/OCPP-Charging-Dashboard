@@ -1,19 +1,19 @@
 ﻿
-@using OpcUaWebDashboard.Properties;
 
 @{
-    ViewBag.Title = @Resources.Dashboard;
+    ViewBag.Title = "Microsoft EV Charging";
 }
+
 <p>
-    <div class="chart-container" width="600" height="400">
+    <img src="~/Dashboard.png" width="800"/>
+</p>
+<p>
+    <div class="chart-container" width="100" height="50">
         <canvas id="myChart"></canvas>
     </div>
 </p>
 <p>
-    <img src="IMG_7211.jpg" width="800"/>
-</p>
-<p>
-    <div id="table" width="600">Please wait while we collect telemetry data from IoT Hub...</div>
+    <div id="table" width="600">Please wait while we collect telemetry data...</div>
 </p>
 
 @section scripts {
@@ -24,6 +24,7 @@
             const config = {
                 type: 'line',
                 options: {
+                    spanGaps: true,
                     responsive: true,
                     plugins: {
                       legend: {
@@ -31,7 +32,7 @@
                       },
                       title: {
                         display: true,
-                        text: 'OPC UA PubSub telemetry data'
+                        text: 'EV Charger Meter Values'
                       }
                 },
                 scales: {
@@ -115,7 +116,9 @@
                     const newDataset = {
                         label: name,
                         borderColor: dsColor,
-                        borderwidth: 3
+                        borderwidth: 3,
+                        cubicInterpolationMode: 'monotone',
+                        tension: 0.5
                     };
                     myChart.data.datasets.push(newDataset);
 
@@ -127,18 +130,23 @@
             connection.on("addDataToChart", function(timestamp, value)
             {
                 myChart.data.labels.push(timestamp);
-                if (myChart.data.labels.length > 100)
-                {
-                    myChart.data.labels.shift();
-                }
-
                 for (var j = 0; j < myChart.data.datasets.length; j++)
                 {
                     myChart.data.datasets[j].data.push(value[j]);
-                    if (myChart.data.datasets[j].data.length > 100)
-                    {
-                        myChart.data.datasets[j].data.shift();
-                    }
+                }
+
+                myChart.update();
+            });
+
+            // clear data function
+            connection.on("removeDataFromChart", function()
+            {
+                while (myChart.data.labels.length > 0)
+                {
+                    myChart.data.labels.splice(-1, 1);
+                    myChart.data.datasets.forEach(dataset => {
+                        dataset.data.pop();
+                    });
                 }
 
                 myChart.update();

@@ -14,27 +14,16 @@ namespace OpcUaWebDashboard.Controllers
     public class DashboardController : Controller
     {
         private static IHubContext<StatusHub> _hubContext;
-        private static List<Tuple<string, string, string>> _latestTelemetry;
+        private static List<Tuple<string, string, string, string, string>> _latestTelemetry;
         private static Stopwatch _tableTimer;
         private static bool _pageReloaded = false;
 
         public DashboardController(IHubContext<StatusHub> hubContext)
         {
-            _hubContext = hubContext;
-            _latestTelemetry = new List<Tuple<string, string, string>>();
+            _latestTelemetry = new List<Tuple<string, string, string, string, string>>();
             _tableTimer = new Stopwatch();
             _tableTimer.Start();
-        }
-
-        public static void AddDatasetToChart(string name)
-        {
-            _hubContext.Clients.All.SendAsync("addDatasetToChart", name).GetAwaiter().GetResult();
-            Debug.WriteLine("Sent new data set: " + name);
-        }
-
-        public static void AddDataToChart(string timestamp, float[] values)
-        {
-            _hubContext.Clients.All.SendAsync("addDataToChart", timestamp, values).GetAwaiter().GetResult();
+            _hubContext = hubContext;
         }
 
         public ActionResult Privacy()
@@ -49,67 +38,92 @@ namespace OpcUaWebDashboard.Controllers
             return View("Index");
         }
 
-        public static void CreateTableForTelemetry(List<Tuple<string,string, string>> telemetry)
+        public static void AddDatasetToChart(string name)
         {
-            foreach (Tuple<string, string, string> item in telemetry)
+            if (_hubContext != null)
             {
-                bool found = false;
-                for (int i = 0; i < _latestTelemetry.Count; i++)
-                {
-                    if (_latestTelemetry[i].Item1 == item.Item1)
-                    {
-                        _latestTelemetry[i] = item;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    _latestTelemetry.Add(item);
-                }
+                _hubContext.Clients.All.SendAsync("addDatasetToChart", name).GetAwaiter().GetResult();
             }
+        }
 
-            // update table every second
-            if (_tableTimer.ElapsedMilliseconds > 1000)
+        public static void AddDataToChart(string timestamp, float[] values)
+        {
+            if (_hubContext != null)
             {
-                // create HTML table
-                StringBuilder sb = new StringBuilder();
-                sb.Append("<table width='800px' cellpadding='3' cellspacing='3'>");
+                _hubContext.Clients.All.SendAsync("addDataToChart", timestamp, values).GetAwaiter().GetResult();
+            }
+        }
 
-                // header
-                sb.Append("<tr>");
-                sb.Append("<th><b>OPC UA Node ID</b></th>");
-                sb.Append("<th><b>Latest Value</b></th>");
-                sb.Append("<th><b>Time Stamp</b></th>");
-                sb.Append("</tr>");
+        public static void ClearChart()
+        {
+            if (_hubContext != null)
+            {
+                _hubContext.Clients.All.SendAsync("removeDataFromChart").GetAwaiter().GetResult();
+            }
+        }
 
-                // rows
-                foreach (Tuple<string, string, string> item in _latestTelemetry)
+        public static void CreateTableForTelemetry(List<Tuple<string,string, string, string, string>> telemetry)
+        {
+            if (_hubContext != null)
+            {
+                foreach (Tuple<string, string, string, string, string> item in telemetry)
                 {
-                    sb.Append("<tr>");
-                    sb.Append("<td style='width:400px'>" + item.Item1 + "</td>");
-                    sb.Append("<td style='width:200px'>" + item.Item2 + "</td>");
-                    sb.Append("<td style='width:200px'>" + item.Item3 + "</td>");
-                    sb.Append("</tr>");
-                }
-
-                sb.Append("</table>");
-
-                _hubContext.Clients.All.SendAsync("addTable", sb.ToString()).GetAwaiter().GetResult();
-
-                // if the page was reloaded in the mean-time, resend the data sets
-                if (_pageReloaded == true)
-                {
-                    foreach (string nodeId in MessageProcessor.NodeIDs)
+                    bool found = false;
+                    for (int i = 0; i < _latestTelemetry.Count; i++)
                     {
-                        AddDatasetToChart(nodeId);
+                        if (_latestTelemetry[i].Item1 == item.Item1)
+                        {
+                            _latestTelemetry[i] = item;
+                            found = true;
+                            break;
+                        }
                     }
 
-                    _pageReloaded = false;
+                    if (!found)
+                    {
+                        _latestTelemetry.Add(item);
+                    }
                 }
 
-                _tableTimer.Restart();
+                // update table every second
+                if (_tableTimer.ElapsedMilliseconds > 1000)
+                {
+                    // create HTML table
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append("<table width='1000px' cellpadding='3' cellspacing='3'>");
+
+                    // header
+                    sb.Append("<tr>");
+                    sb.Append("<th><b>Transaction</b></th>");
+                    sb.Append("<th><b>Badge</b></th>");
+                    sb.Append("<th><b>Start Time</b></th>");
+                    sb.Append("<th><b>Stop Time</b></th>");
+                    sb.Append("<th><b>Used Power (Wh)</b></th>");
+                    sb.Append("</tr>");
+
+                    // rows
+                    foreach (Tuple<string, string, string, string, string> item in _latestTelemetry)
+                    {
+                        sb.Append("<tr>");
+                        sb.Append("<td style='width:200px'>" + item.Item1 + "</td>");
+                        sb.Append("<td style='width:200px'>" + item.Item2 + "</td>");
+                        sb.Append("<td style='width:200px'>" + item.Item3 + "</td>");
+                        sb.Append("<td style='width:200px'>" + item.Item4 + "</td>");
+                        sb.Append("<td style='width:200px'>" + item.Item5 + "</td>");
+                        sb.Append("</tr>");
+                    }
+
+                    sb.Append("</table>");
+
+                    _hubContext.Clients.All.SendAsync("addTable", sb.ToString()).GetAwaiter().GetResult();
+
+                    if (_pageReloaded == true)
+                    {
+                        _pageReloaded = false;
+                    }
+
+                    _tableTimer.Restart();
+                }
             }
         }
     }

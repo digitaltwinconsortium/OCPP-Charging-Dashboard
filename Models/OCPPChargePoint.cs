@@ -14,15 +14,12 @@ namespace OCPPCentralSystem.Schemas.DTDL
         {
             // init data
             ID = string.Empty;
-            Status = string.Empty;
-            Connectors = new Dictionary<int, Connector>();
+            Connectors = new ConcurrentDictionary<int, Connector>();
         }
 
         public string ID { get; set; }
 
-        public string Status { get; set; }
-
-        public Dictionary<int, Connector> Connectors { get; set; }
+        public ConcurrentDictionary<int, Connector> Connectors { get; set; }
     }
 
     public class Connector
@@ -31,11 +28,14 @@ namespace OCPPCentralSystem.Schemas.DTDL
         {
             // init data
             ID = id;
+            Status = string.Empty;
             MeterReadings = new List<MeterReading>();
             CurrentTransactions = new ConcurrentDictionary<int, Transaction>();
         }
 
         public int ID { get; set; }
+
+        public string Status { get; set; }
 
         public List<MeterReading> MeterReadings { get; set; }
 
