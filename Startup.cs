@@ -73,6 +73,10 @@ namespace EVCharging
 
                 endpoints.MapHub<StatusHub>("/statushub");
             });
+
+            IServiceScope serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope();
+            ApplicationDbContext  dataContext = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
+            dataContext.Database.Migrate();
         }
     }
 }
