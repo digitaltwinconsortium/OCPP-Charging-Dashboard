@@ -33,13 +33,15 @@ namespace EVCharging
 
             services.AddRazorPages();
 
-            services.AddSignalR();
+            //services.AddSignalR();
 
             services.AddTransient<IEmailSender, EmailSender>();
 
             services.AddAuthentication();
 
-            services.AddAntiforgery(x => x.HeaderName = "X-XSRF-TOKEN");
+            services.AddAuthorization();
+
+            //services.AddAntiforgery(x => x.HeaderName = "X-XSRF-TOKEN");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,7 +77,7 @@ namespace EVCharging
 
                 endpoints.MapRazorPages();
 
-                endpoints.MapHub<StatusHub>("/statushub");
+                //endpoints.MapHub<StatusHub>("/statushub");
             });
 
             IServiceScope serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope();
