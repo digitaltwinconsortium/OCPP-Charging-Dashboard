@@ -36,6 +36,10 @@ namespace EVCharging
             services.AddSignalR();
 
             services.AddTransient<IEmailSender, EmailSender>();
+
+            services.AddAuthentication();
+
+            services.AddAntiforgery(x => x.HeaderName = "X-XSRF-TOKEN");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
