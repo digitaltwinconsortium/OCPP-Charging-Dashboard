@@ -1,8 +1,6 @@
 using EVCharging.Data;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpcUaWebDashboard.Controllers;
-using System;
 
 namespace EVCharging
 {
@@ -26,12 +23,6 @@ namespace EVCharging
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CookiePolicyOptions>(o =>
-            {
-                o.Secure = CookieSecurePolicy.Always;
-                o.HttpOnly = HttpOnlyPolicy.Always;
-            });
-
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration["MyDbConnection"]));
 
@@ -65,8 +56,6 @@ namespace EVCharging
             app.UseHttpsRedirection();
 
             app.UseStaticFiles();
-
-            app.UseCookiePolicy();
 
             app.UseRouting();
 
