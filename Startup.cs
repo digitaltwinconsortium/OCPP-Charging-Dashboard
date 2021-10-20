@@ -1,5 +1,7 @@
+using Azure.Identity;
 using EVCharging.Data;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -42,11 +44,9 @@ namespace EVCharging
 
             services.AddAuthorization();
 
-            services.AddAntiforgery(x => x.HeaderName = "X-XSRF-TOKEN");
-
-            services.AddSession(options => {
-                options.IdleTimeout = TimeSpan.FromMinutes(5);
-            });
+            services.AddDataProtection()
+                    .PersistKeysToAzureBlobStorage(new Uri(Configuration["blobUriWithSasToken"]),
+                    new DefaultAzureCredential());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -66,8 +66,6 @@ namespace EVCharging
             }
 
             app.UseHttpsRedirection();
-
-            app.UseSession();
 
             app.UseStaticFiles();
 
