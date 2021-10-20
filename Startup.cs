@@ -33,7 +33,7 @@ namespace EVCharging
             });
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(Environment.GetEnvironmentVariable("MyDbConnection")));
+                options.UseSqlServer(Configuration["MyDbConnection"]));
 
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
