@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  AZURE_WEBAPP_NAME: EVCharging
+  AZURE_WEBAPP_NAME: msevcharging
   AZURE_WEBAPP_PACKAGE_PATH: '.' # Set this to the path to your web app project, defaults to the repository root:
   DOTNET_VERSION: '5.0.301' # The .NET SDK version to use
 
