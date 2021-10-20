@@ -1,5 +1,6 @@
 using EVCharging.Data;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -28,8 +29,7 @@ namespace EVCharging
             services.Configure<CookiePolicyOptions>(o =>
             {
                 o.Secure = CookieSecurePolicy.Always;
-                o.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
-
+                o.HttpOnly = HttpOnlyPolicy.Always;
             });
 
             services.AddDbContext<ApplicationDbContext>(options =>
