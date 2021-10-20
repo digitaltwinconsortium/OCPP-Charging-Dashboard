@@ -37,9 +37,9 @@ namespace EVCharging
 
             services.AddTransient<IEmailSender, EmailSender>();
 
-            services.AddAuthentication();
+            //services.AddAuthentication();
 
-            services.AddAuthorization();
+            //services.AddAuthorization();
 
             //services.AddAntiforgery(x => x.HeaderName = "X-XSRF-TOKEN");
         }
@@ -54,9 +54,9 @@ namespace EVCharging
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
+                app.UseExceptionHandler("/Shared/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
+                //app.UseHsts();
             }
 
             app.UseHttpsRedirection();
@@ -65,9 +65,9 @@ namespace EVCharging
 
             app.UseRouting();
 
-            app.UseAuthentication();
+            //app.UseAuthentication();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
