@@ -33,15 +33,15 @@ namespace EVCharging
 
             services.AddRazorPages();
 
-            //services.AddSignalR();
+            services.AddSignalR();
 
             services.AddTransient<IEmailSender, EmailSender>();
 
-            //services.AddAuthentication();
+            services.AddAuthentication();
 
-            //services.AddAuthorization();
+            services.AddAuthorization();
 
-            //services.AddAntiforgery(x => x.HeaderName = "X-XSRF-TOKEN");
+            services.AddAntiforgery(x => x.HeaderName = "X-XSRF-TOKEN");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,6 +55,7 @@ namespace EVCharging
             else
             {
                 app.UseExceptionHandler("/Shared/Error");
+
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 //app.UseHsts();
             }
@@ -65,9 +66,9 @@ namespace EVCharging
 
             app.UseRouting();
 
-            //app.UseAuthentication();
+            app.UseAuthentication();
 
-            //app.UseAuthorization();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
@@ -77,7 +78,7 @@ namespace EVCharging
 
                 endpoints.MapRazorPages();
 
-                //endpoints.MapHub<StatusHub>("/statushub");
+                endpoints.MapHub<StatusHub>("/statushub");
             });
 
             IServiceScope serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope();

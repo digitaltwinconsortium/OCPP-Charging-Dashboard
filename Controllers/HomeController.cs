@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace EVCharging.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
