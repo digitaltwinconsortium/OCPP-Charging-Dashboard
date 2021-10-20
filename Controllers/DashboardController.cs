@@ -12,7 +12,7 @@ namespace OpcUaWebDashboard.Controllers
     {
     }
 
-    [Authorize]
+    //[Authorize]
     public class DashboardController : Controller
     {
         private static IHubContext<StatusHub> _hubContext;
