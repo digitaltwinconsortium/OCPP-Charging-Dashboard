@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpcUaWebDashboard.Controllers;
+using System;
 
 namespace EVCharging
 {
@@ -42,6 +43,10 @@ namespace EVCharging
             services.AddAuthorization();
 
             services.AddAntiforgery(x => x.HeaderName = "X-XSRF-TOKEN");
+
+            services.AddSession(options => {
+                options.IdleTimeout = TimeSpan.FromMinutes(5);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -57,10 +62,12 @@ namespace EVCharging
                 app.UseExceptionHandler("/Shared/Error");
 
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                //app.UseHsts();
+                app.UseHsts();
             }
 
             app.UseHttpsRedirection();
+
+            app.UseSession();
 
             app.UseStaticFiles();
 
