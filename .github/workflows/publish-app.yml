@@ -26,12 +26,10 @@ jobs:
 
     - name: Build
       run: |
-        cd DotNet.WebApp
         dotnet build --configuration Release --no-restore
         dotnet publish -c Release -o ../dotnet-webapp -r linux-x64 --self-contained true /p:UseAppHost=true
     - name: Test
       run: |
-        cd DotNet.WebApp.Tests
         dotnet test --no-restore --verbosity normal
 
     - uses: azure/webapps-deploy@v2
