@@ -12,10 +12,7 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "StorageAccountConnectionString": "DefaultEndpointsProtocol=https;AccountName=evcharging;AccountKey=q0gt/O7DlQkH5ehRG8I+VA5DqHvc1pluuRpc8EkJE32SfRTQvQRsk9wCSR55CZCxwzA1b15JQ/75SaFUT/6CZA==;EndpointSuffix=core.windows.net",
-        "IotHubEventHubName": "EVCharging",
-        "EventHubEndpointIotHubOwnerConnectionString": "Endpoint=sb://iothub-ns-evcharging-15432753-b4738ed66d.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=vleFIxKaEDf17pleXZ+O60U7k0WVCoNASnV7bENDNBA=;EntityPath=evcharging",
-        "ASPNETCORE_ENVIRONMENT": "Development"
+         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "EVCharging": {
