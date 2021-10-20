@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <None Include=".github\workflows\docker-publish.yml" />
+    <None Include=".github\workflows\publish-app.yml" />
   </ItemGroup>
 
   <ItemGroup>
