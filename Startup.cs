@@ -45,8 +45,7 @@ namespace EVCharging
             services.AddAuthorization();
 
             services.AddDataProtection()
-                    .PersistKeysToAzureBlobStorage(new Uri(Configuration["blobUriWithSasToken"]),
-                    new DefaultAzureCredential());
+                    .PersistKeysToAzureBlobStorage(Configuration["StorageAccountConnectionString"], "keys", "keys");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
