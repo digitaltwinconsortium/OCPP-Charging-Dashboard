@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,7 @@ namespace OpcUaWebDashboard.Controllers
     {
     }
 
+    [Authorize]
     public class DashboardController : Controller
     {
         private static IHubContext<StatusHub> _hubContext;
