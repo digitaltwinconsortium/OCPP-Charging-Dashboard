@@ -15,11 +15,9 @@ namespace OpcUaWebDashboard.Controllers
     public class DashboardController : Controller
     {
         private static IHubContext<StatusHub> _hubContext;
-        private static List<Tuple<string, string, string, string, string>> _latestTelemetry;
 
         public DashboardController(IHubContext<StatusHub> hubContext)
         {
-            _latestTelemetry = new List<Tuple<string, string, string, string, string>>();
             _hubContext = hubContext;
         }
 
@@ -75,25 +73,6 @@ namespace OpcUaWebDashboard.Controllers
         {
             if (_hubContext != null)
             {
-                foreach (Tuple<string, string, string, string, string> item in telemetry)
-                {
-                    bool found = false;
-                    for (int i = 0; i < _latestTelemetry.Count; i++)
-                    {
-                        if (_latestTelemetry[i].Item1 == item.Item1)
-                        {
-                            _latestTelemetry[i] = item;
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found)
-                    {
-                        _latestTelemetry.Add(item);
-                    }
-                }
-
                 // create HTML table
                 StringBuilder sb = new StringBuilder();
                 sb.Append("<table width='1000px' cellpadding='3' cellspacing='3'>");
@@ -108,7 +87,7 @@ namespace OpcUaWebDashboard.Controllers
                 sb.Append("</tr>");
 
                 // rows
-                foreach (Tuple<string, string, string, string, string> item in _latestTelemetry)
+                foreach (Tuple<string, string, string, string, string> item in telemetry)
                 {
                     sb.Append("<tr>");
                     sb.Append("<td style='width:200px'>" + item.Item1 + "</td>");
