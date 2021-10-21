@@ -31,9 +31,14 @@ namespace OpcUaWebDashboard.Controllers
             return View("Index");
         }
 
+        public ActionResult Notify()
+        {
+            return View("Index");
+        }
+
         public static void AddCharts(int count)
         {
-            if (_hubContext != null)
+            if ((_hubContext != null) && (count > 0))
             {
                 // create HTML charts
                 StringBuilder sb = new StringBuilder();
@@ -69,7 +74,7 @@ namespace OpcUaWebDashboard.Controllers
             }
         }
 
-        public static void CreateTableForTelemetry(List<Tuple<string,string, string, string, string>> telemetry)
+        public static void CreateTableForTransactions(List<Tuple<string,string, string, string, string>> telemetry)
         {
             if (_hubContext != null)
             {
@@ -99,7 +104,49 @@ namespace OpcUaWebDashboard.Controllers
                 }
 
                 sb.Append("</table>");
-                _hubContext.Clients.All.SendAsync("addTable", sb.ToString()).GetAwaiter().GetResult();
+
+                _hubContext.Clients.All.SendAsync("addTransactionTable", sb.ToString()).GetAwaiter().GetResult();
+            }
+        }
+
+        internal static void CreateTableForStatus(List<string> statusList)
+        {
+            if (_hubContext != null)
+            {
+                // create HTML table
+                StringBuilder sb = new StringBuilder();
+                sb.Append("<table width='1000px' cellpadding='3' cellspacing='3'>");
+
+                // header
+                sb.Append("<tr>");
+                sb.Append("<th><b>Connector</b></th>");
+                sb.Append("<th><b>Status</b></th>");
+                sb.Append("</tr>");
+
+                // rows
+                bool connectorAvailable = false;
+                for (int i = 0; i < statusList.Count; i++)
+                {
+                    sb.Append("<tr>");
+                    sb.Append("<td style='width:200px'>" + (i + 1).ToString() + "</td>");
+                    sb.Append("<td style='width:200px'>" + statusList[i] + "</td>");
+                    sb.Append("</tr>");
+
+                    if (statusList[i] == "Available")
+                    {
+                        connectorAvailable = true;
+                    }
+                }
+
+                sb.Append("</table>");
+
+                if (!connectorAvailable)
+                {
+                    sb.Append("<br/>");
+                    sb.Append("<button type=\"button\" class=\"btn btn-primary\" onclick=\"location.href='@Url.Action(\"Notify\", \"Dashboard\")'\">Notify</button> me via email when a connector becomes available on this charger.");
+                }
+                
+                _hubContext.Clients.All.SendAsync("addStatusTable", sb.ToString()).GetAwaiter().GetResult();
             }
         }
     }

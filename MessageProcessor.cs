@@ -54,8 +54,13 @@ namespace OpcUaWebDashboard
             // add new charts
             DashboardController.AddCharts(publisherMessage.Connectors.Count);
 
+            // build status table of connectors
+            List<string> status = new List<string>();
+
             foreach (KeyValuePair<int, Connector> connector in publisherMessage.Connectors)
             {
+                status.Add(connector.Value.Status);
+                                
                 // add connector ID as label to chart
                 string chartName = "Connector " + connector.Value.ID.ToString();
                 DashboardController.AddDatasetToChart(connector.Value.ID - 1, chartName);
@@ -92,8 +97,10 @@ namespace OpcUaWebDashboard
                 }
 
                 // create our transaction table in the dashboard
-                DashboardController.CreateTableForTelemetry(tableEntries);
+                DashboardController.CreateTableForTransactions(tableEntries);
             }
+
+            DashboardController.CreateTableForStatus(status);
         }
 
         private void Checkpoint(PartitionContext context, Stopwatch checkpointStopwatch)

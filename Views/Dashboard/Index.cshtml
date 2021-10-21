@@ -7,9 +7,18 @@
 <p>
     <img src="~/Dashboard.png" width="800"/>
 </p>
+<br />
+<hr />
 <p>
-    <div id="table" width="600">Please wait while charger usage data is collected...</div>
+    <div id="statustable" width="600">Please wait while charger usage data is collected...</div>
 </p>
+<br />
+<hr />
+<p>
+    <div id="transactiontable" width="600"></div>
+</p>
+<br />
+<hr />
 <p>
     <div id="charts" class="chart-container" width="100" height="50"/>
 </p>
@@ -146,10 +155,16 @@
                 }
             });
 
-            // add table function
-            connection.on("addTable", function (html)
+            // add status table function
+            connection.on("addStatusTable", function (html)
             {
-                $('#table').html(html);
+                $('#statustable').html(html);
+            });
+
+            // add transaction table function
+            connection.on("addTransactionTable", function (html)
+            {
+                $('#transactiontable').html(html);
             });
 
             connection.start().then(function ()
