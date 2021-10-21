@@ -1,4 +1,3 @@
-using Azure.Identity;
 using EVCharging.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -10,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpcUaWebDashboard.Controllers;
-using System;
 
 namespace EVCharging
 {

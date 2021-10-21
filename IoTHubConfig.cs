@@ -2,7 +2,6 @@
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,8 +25,7 @@ namespace OpcUaWebDashboard
             string solutionStorageAccountConnectionString = Environment.GetEnvironmentVariable("StorageAccountConnectionString");
 
             // Initialize EventProcessorHost.
-            Trace.TraceInformation("Creating EventProcessorHost for IoTHub: {0}, ConsumerGroup: {1}, ConnectionString: {2}, StorageConnectionString: {3}",
-                iotHubEventHubName, iotHubTelemetryConsumerGroup, iotHubEventHubEndpointIotHubOwnerConnectionString, solutionStorageAccountConnectionString);
+            Console.WriteLine("Creating Event Processor Host for IoT Hub: {0}, ConsumerGroup: {1}", iotHubEventHubName, iotHubTelemetryConsumerGroup);
 
             string StorageContainerName = "telemetrycheckpoints";
             eventProcessorHost = new EventProcessorHost(
@@ -44,11 +42,11 @@ namespace OpcUaWebDashboard
             try
             {
                 await eventProcessorHost.RegisterEventProcessorAsync<MessageProcessor>(options);
-                Trace.TraceInformation($"EventProcessor successfully registered");
+                Console.WriteLine($"EventProcessor successfully registered");
             }
             catch (Exception e)
             {
-                Trace.TraceInformation($"Exception during register EventProcessorHost '{e.Message}'");
+                Console.WriteLine($"Exception during register EventProcessorHost '{e.Message}'");
             }
 
             // Wait till shutdown.
@@ -56,7 +54,7 @@ namespace OpcUaWebDashboard
             {
                 if (ct.IsCancellationRequested)
                 {
-                    Trace.TraceInformation($"Application is shutting down. Unregistering EventProcessorHost...");
+                    Console.WriteLine($"Application is shutting down. Unregistering EventProcessorHost...");
                     await eventProcessorHost.UnregisterEventProcessorAsync();
                     return;
                 }
@@ -66,7 +64,7 @@ namespace OpcUaWebDashboard
 
         private static void EventProcessorHostExceptionHandler(ExceptionReceivedEventArgs args)
         {
-            Trace.TraceInformation($"EventProcessorHostException: {args.Exception.Message}");
+            Console.WriteLine($"EventProcessorHostException: {args.Exception.Message}");
         }
     }
 }

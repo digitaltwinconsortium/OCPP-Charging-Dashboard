@@ -29,8 +29,8 @@ namespace OpcUaWebDashboard
 
         public Task ProcessErrorAsync(PartitionContext context, Exception error)
         {
-            Trace.TraceError($"Message processor error '{error.Message}' on partition with id '{context.PartitionId}'");
-            Trace.TraceError($"Exception stack '{error.StackTrace}'");
+            Console.WriteLine($"Message processor error '{error.Message}' on partition with id '{context.PartitionId}'");
+            Console.WriteLine($"Exception stack '{error.StackTrace}'");
             return Task.CompletedTask;
         }
 
@@ -49,12 +49,22 @@ namespace OpcUaWebDashboard
             List<float> yaxis = new List<float>();
 
             // clear previous data
-            DashboardController.ClearChart();
+            DashboardController.ClearCharts();
+
+            // add new charts
+            DashboardController.AddCharts(publisherMessage.Connectors.Count);
 
             foreach (KeyValuePair<int, Connector> connector in publisherMessage.Connectors)
             {
-                // add connector name as label
-                DashboardController.AddDatasetToChart("Connector " + connector.Key.ToString());
+                // add connector ID as label to chart
+                string chartName = "Connector " + connector.Value.ID.ToString();
+                DashboardController.AddDatasetToChart(connector.Value.ID - 1, chartName);
+
+                // update our line chart in the dashboard
+                foreach (MeterReading reading in connector.Value.MeterReadings)
+                {
+                    DashboardController.AddDataToChart(connector.Value.ID - 1, reading.Timestamp.ToString(), reading.MeterValue);
+                }
 
                 // add items to our transaction table
                 foreach (KeyValuePair<int, Transaction> transaction in connector.Value.CurrentTransactions.ToArray())
@@ -83,14 +93,6 @@ namespace OpcUaWebDashboard
 
                 // create our transaction table in the dashboard
                 DashboardController.CreateTableForTelemetry(tableEntries);
-
-                // update our line chart in the dashboard
-                foreach (MeterReading reading in connector.Value.MeterReadings)
-                {
-                    float[] array = new float[1];
-                    array[0] = reading.MeterValue;
-                    DashboardController.AddDataToChart(reading.Timestamp.ToString(), array);
-                }
             }
         }
 
@@ -98,7 +100,7 @@ namespace OpcUaWebDashboard
         {
             context.CheckpointAsync();
             checkpointStopwatch.Restart();
-            Trace.TraceInformation($"checkpoint completed at {DateTime.UtcNow}");
+            Console.WriteLine($"checkpoint completed at {DateTime.UtcNow}");
         }
 
         /// <summary>
@@ -130,7 +132,7 @@ namespace OpcUaWebDashboard
                 }
                 catch (Exception e)
                 {
-                    Trace.TraceError($"Exception '{e.Message}' processing message '{message}'");
+                    Console.WriteLine($"Exception '{e.Message}' processing message '{message}'");
                 }
             }
         }
