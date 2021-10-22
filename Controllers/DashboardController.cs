@@ -36,33 +36,27 @@ namespace OpcUaWebDashboard.Controllers
             return View("Index");
         }
 
-        public static void AddCharts(int count)
-        {
-            if ((_hubContext != null) && (count > 0))
-            {
-                // create HTML charts
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < count; i++)
-                {
-                    sb.Append("<canvas id='myChart" + i + "'></canvas>");
-                }
-                _hubContext.Clients.All.SendAsync("addCharts", count, sb.ToString()).GetAwaiter().GetResult();
-            }
-        }
-
-        public static void AddDatasetToChart(int index, string name)
+        public static void AddChargers(string chargers)
         {
             if (_hubContext != null)
             {
-                _hubContext.Clients.All.SendAsync("addDatasetToChart", index, name).GetAwaiter().GetResult();
+                _hubContext.Clients.All.SendAsync("addChargers", chargers).GetAwaiter().GetResult();
             }
         }
 
-        public static void AddDataToChart(int index, string timestamp, float value)
+        public static void AddChart(string name)
         {
             if (_hubContext != null)
             {
-                _hubContext.Clients.All.SendAsync("addDataToChart", index, timestamp, value).GetAwaiter().GetResult();
+               _hubContext.Clients.All.SendAsync("addChart", name).GetAwaiter().GetResult();
+            }
+        }
+
+        public static void AddDataToChart(string name, string[] timestamps, float[] values)
+        {
+            if (_hubContext != null)
+            {
+                _hubContext.Clients.All.SendAsync("addDataToChart", name, timestamps, values).GetAwaiter().GetResult();
             }
         }
 
@@ -74,13 +68,13 @@ namespace OpcUaWebDashboard.Controllers
             }
         }
 
-        public static void CreateTableForTransactions(List<Tuple<string,string, string, string, string>> telemetry)
+        public static void CreateTableForTransactions(string key, List<Tuple<string,string, string, string, string>> telemetry)
         {
             if (_hubContext != null)
             {
                 // create HTML table
                 StringBuilder sb = new StringBuilder();
-                sb.Append("<table width='1000px' cellpadding='3' cellspacing='3'>");
+                sb.Append("<table cellpadding='3' cellspacing='3'>");
 
                 // header
                 sb.Append("<tr>");
@@ -105,17 +99,17 @@ namespace OpcUaWebDashboard.Controllers
 
                 sb.Append("</table>");
 
-                _hubContext.Clients.All.SendAsync("addTransactionTable", sb.ToString()).GetAwaiter().GetResult();
+                _hubContext.Clients.All.SendAsync("addTransactionTable", key, sb.ToString()).GetAwaiter().GetResult();
             }
         }
 
-        internal static void CreateTableForStatus(List<string> statusList)
+        public static void CreateTableForStatus(string key, List<string> statusList)
         {
             if (_hubContext != null)
             {
                 // create HTML table
                 StringBuilder sb = new StringBuilder();
-                sb.Append("<table width='1000px' cellpadding='3' cellspacing='3'>");
+                sb.Append("<table cellpadding='3' cellspacing='3'>");
 
                 // header
                 sb.Append("<tr>");
@@ -140,13 +134,8 @@ namespace OpcUaWebDashboard.Controllers
 
                 sb.Append("</table>");
 
-                if (!connectorAvailable)
-                {
-                    sb.Append("<br/>");
-                    sb.Append("<button type=\"button\" class=\"btn btn-primary\" onclick=\"location.href='@Url.Action(\"Notify\", \"Dashboard\")'\">Notify</button> me via email when a connector becomes available on this charger.");
-                }
-                
-                _hubContext.Clients.All.SendAsync("addStatusTable", sb.ToString()).GetAwaiter().GetResult();
+                _hubContext.Clients.All.SendAsync("availableStatus", key, connectorAvailable).GetAwaiter().GetResult();
+                _hubContext.Clients.All.SendAsync("addStatusTable", key, sb.ToString()).GetAwaiter().GetResult();
             }
         }
     }
