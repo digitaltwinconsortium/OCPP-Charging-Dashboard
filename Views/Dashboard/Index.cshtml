@@ -9,6 +9,11 @@
 </p>
 <br />
 <hr />
+
+<form method="post">
+    <input id="notify" type="hidden" value="Notify me when a charger becomes available" asp-controller="Dashboard" asp-action="Notify" />
+</form>
+
 <p>
     <div id="chargers" width="800">Please wait while charger usage data is collected...</div>
 </p>
@@ -68,16 +73,32 @@
             connection.on("addChargers", function (html)
             {
                 document.getElementById("chargers").innerHTML = html;
+
+                // remove old charts
+                while (charts.length > 0)
+                {
+                    var currentChart = charts.pop();
+                    currentChart.destroy();
+                }
             });
 
-            connection.on("availableStatus", function (name, available)
+            connection.on("availableStatus", function (available)
             {
-                //document.getElementById(name + "notify").visible = !available;
+                if (!available)
+                {
+                    document.getElementById("notify").type = 'submit';
+                }
+                else
+                {
+                    document.getElementById("notify").type = 'hidden';
+                }
             });
+
+            var charts = new Array();
 
             connection.on("addChart", function (name, timestamps, values)
             {
-                new Chart(document.getElementById(name).getContext('2d'), {
+                charts.push(new Chart(document.getElementById(name).getContext('2d'), {
                    type: 'line',
                     options: {
                         spanGaps: true,
@@ -114,7 +135,7 @@
                             data: values
                         }]
                     }
-                });
+                }));
             });
 
             // add table function

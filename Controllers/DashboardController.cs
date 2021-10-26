@@ -32,7 +32,7 @@ namespace OpcUaWebDashboard.Controllers
 
         public ActionResult Index()
         {
-            _timer.Change(500, 500);
+            _timer.Change(1000, 1000);
 
             return View("Index");
         }
@@ -67,9 +67,9 @@ namespace OpcUaWebDashboard.Controllers
                     sb.Append("<tr>");
                     foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in MessageProcessor.CentralStation)
                     {
-                        sb.Append("<td valign='top'>");
+                        sb.Append("<td width='500px' valign='top'>");
                         sb.Append("<hr/>");
-                        sb.Append("<div id=\"" + chargePoint.Value.ID + "_statustable\" width=\"400\"/>");
+                        sb.Append("<div id=\"" + chargePoint.Value.ID + "_statustable\"/>");
                         sb.Append("</td>");
                     }
                     sb.Append("</tr>");
@@ -77,23 +77,23 @@ namespace OpcUaWebDashboard.Controllers
                     sb.Append("<tr>");
                     foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in MessageProcessor.CentralStation)
                     {
-                        sb.Append("<td valign='top'>");
+                        sb.Append("<td width='500px' valign='top'>");
                         sb.Append("<table cellpadding='3' cellspacing='3'>");
                         foreach (KeyValuePair<int, Connector> connector in chargePoint.Value.Connectors)
                         {
                             string name = chargePoint.Value.ID + "_" + connector.Value.ID.ToString();
 
                             sb.Append("<tr>");
-                            sb.Append("<td valign='top'>");
+                            sb.Append("<td width='500px' valign='top'>");
                             sb.Append("<hr/>");
-                            sb.Append("<div id=\"" + name + "_transactiontable\" width =\"380\"></div>");
+                            sb.Append("<div id=\"" + name + "_transactiontable\"></div>");
                             sb.Append("</td>");
                             sb.Append("</tr>");
 
                             sb.Append("<tr>");
-                            sb.Append("<td valign='top'>");
+                            sb.Append("<td width='500px' valign='top'>");
                             sb.Append("<hr/>");
-                            sb.Append("<canvas id=\"" + name + "_chart\" width=\"380\" height=\"200\"/>");
+                            sb.Append("<canvas id=\"" + name + "_chart\" height=\"200\"/>");
                             sb.Append("</td>");
                             sb.Append("</tr>");
                         }
@@ -106,6 +106,11 @@ namespace OpcUaWebDashboard.Controllers
 
                     AddChargers(sb.ToString());
 
+                    // wait a few milliseconds for the table scaffolding to be in place before populating it
+                    Thread.Sleep(100);
+
+                    bool chargerAvailable = false;
+
                     foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in MessageProcessor.CentralStation)
                     {
                         // build status table of connectors
@@ -114,6 +119,11 @@ namespace OpcUaWebDashboard.Controllers
                         foreach (KeyValuePair<int, Connector> connector in chargePoint.Value.Connectors)
                         {
                             status.Add(connector.Value.Status);
+
+                            if (connector.Value.Status == "Available")
+                            {
+                                chargerAvailable = true;
+                            }
 
                             // add chart
                             List<string> labels = new List<string>();
@@ -157,6 +167,8 @@ namespace OpcUaWebDashboard.Controllers
 
                         CreateTableForStatus(chargePoint.Value.ID + "_statustable", status);
                     }
+
+                    _hubContext.Clients.All.SendAsync("availableStatus", chargerAvailable).GetAwaiter().GetResult();
                 }
             }
             finally
@@ -231,23 +243,16 @@ namespace OpcUaWebDashboard.Controllers
                 sb.Append("</tr>");
 
                 // rows
-                bool connectorAvailable = false;
                 for (int i = 0; i < statusList.Count; i++)
                 {
                     sb.Append("<tr>");
                     sb.Append("<td style='width:200px'>" + (i + 1).ToString() + "</td>");
                     sb.Append("<td style='width:200px'>" + statusList[i] + "</td>");
                     sb.Append("</tr>");
-
-                    if (statusList[i] == "Available")
-                    {
-                        connectorAvailable = true;
-                    }
                 }
 
                 sb.Append("</table>");
 
-                _hubContext.Clients.All.SendAsync("availableStatus", key, connectorAvailable).GetAwaiter().GetResult();
                 _hubContext.Clients.All.SendAsync("addTable", key, sb.ToString()).GetAwaiter().GetResult();
             }
         }
