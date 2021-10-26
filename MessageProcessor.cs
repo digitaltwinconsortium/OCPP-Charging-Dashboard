@@ -2,12 +2,12 @@
 using Microsoft.Azure.EventHubs.Processor;
 using Newtonsoft.Json;
 using OCPPCentralSystem.Schemas.DTDL;
-using OpcUaWebDashboard.Controllers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OpcUaWebDashboard
@@ -17,12 +17,18 @@ namespace OpcUaWebDashboard
     /// </summary>
     public class MessageProcessor : IEventProcessor
     {
+        public static ConcurrentDictionary<string, OCPPChargePoint> CentralStation { get; set; }
+
+        public static SemaphoreSlim CentralStationLock = new SemaphoreSlim(1);
+
         private Stopwatch _checkpointStopwatch = new Stopwatch();
+
         private const double _checkpointPeriodInMinutes = 5;
+
+        private uint _messageCount = 0;
 
         public Task OpenAsync(PartitionContext context)
         {
-            // get number of messages between checkpoints
             _checkpointStopwatch.Start();
 
             return Task.CompletedTask;
@@ -39,7 +45,7 @@ namespace OpcUaWebDashboard
         {
             if (reason == CloseReason.Shutdown)
             {
-                await context.CheckpointAsync();
+                await context.CheckpointAsync().ConfigureAwait(false);
             }
         }
 
@@ -56,27 +62,38 @@ namespace OpcUaWebDashboard
         /// </summary>
         public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> ingestedMessages)
         {
+            // checkpoint, so that the processor does not need to start from the beginning if it restarts
+            if (_checkpointStopwatch.Elapsed > TimeSpan.FromMinutes(_checkpointPeriodInMinutes))
+            {
+                await Task.Run(() => Checkpoint(context, _checkpointStopwatch)).ConfigureAwait(false);
+            }
+
             // process each message
-            foreach (var eventData in ingestedMessages)
+            foreach (EventData eventData in ingestedMessages)
             {
                 string message = null;
+                CentralStationLock.Wait();
                 try
                 {
-                    // checkpoint, so that the processor does not need to start from the beginning if it restarts
-                    if (_checkpointStopwatch.Elapsed > TimeSpan.FromMinutes(_checkpointPeriodInMinutes))
-                    {
-                        await Task.Run(() => Checkpoint(context, _checkpointStopwatch)).ConfigureAwait(false);
-                    }
-
                     message = Encoding.UTF8.GetString(eventData.Body.Array, eventData.Body.Offset, eventData.Body.Count);
                     if (message != null)
                     {
-                        DashboardController.CentralStation = JsonConvert.DeserializeObject<ConcurrentDictionary<string, OCPPChargePoint>>(message);
+                        CentralStation = JsonConvert.DeserializeObject<ConcurrentDictionary<string, OCPPChargePoint>>(message);
                     }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Exception '{ex.Message}' processing message '{message}'");
+                }
+                finally
+                {
+                    CentralStationLock.Release();
+                }
+
+                _messageCount++;
+                if (_messageCount % 10 == 0)
+                {
+                    Console.WriteLine($"Processed {_messageCount} messages.");
                 }
             }
         }

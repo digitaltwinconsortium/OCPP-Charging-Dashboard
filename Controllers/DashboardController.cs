@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using OCPPCentralSystem.Schemas.DTDL;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -17,8 +16,6 @@ namespace OpcUaWebDashboard.Controllers
     [Authorize]
     public class DashboardController : Controller
     {
-        public static ConcurrentDictionary<string, OCPPChargePoint> CentralStation { get; set; }
-
         private static IHubContext<StatusHub> _hubContext;
 
         private static Timer _timer = new Timer(GenerateDashboard, null, -1, -1);
@@ -35,8 +32,8 @@ namespace OpcUaWebDashboard.Controllers
 
         public ActionResult Index()
         {
-            _timer.Change(5000, 5000);
-       
+            _timer.Change(1000, 1000);
+
             return View("Index");
         }
 
@@ -47,123 +44,125 @@ namespace OpcUaWebDashboard.Controllers
 
         private static void GenerateDashboard(Object state)
         {
-            if (CentralStation != null)
+            MessageProcessor.CentralStationLock.Wait();
+            try
             {
-                // turn off timer
-                _timer.Change(-1, -1);
-
-                // clear previous data
-                ClearCharts();
-
-                StringBuilder sb = new StringBuilder();
-                sb.Append("<table cellpadding='3' cellspacing='3'>");
-
-                sb.Append("<tr>");
-                foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in CentralStation)
+                if (MessageProcessor.CentralStation != null)
                 {
-                    sb.Append("<th>");
-                    sb.Append("<b>" + chargePoint.Value.ID + "</b>");
-                    sb.Append("</th>");
-                }
-                sb.Append("</tr>");
+                    // turn off timer
+                    _timer.Change(-1, -1);
 
-                sb.Append("<tr>");
-                foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in CentralStation)
-                {
-                    sb.Append("<td valign='top'>");
-                    sb.Append("<hr/>");
-                    sb.Append("<div id=\"" + chargePoint.Value.ID + "statustable\" width=\"400\"/>");
-                    sb.Append("</td>");
-                }
-                sb.Append("</tr>");
-
-                sb.Append("<tr>");
-                foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in CentralStation)
-                {
-                    sb.Append("<td valign='top'>");
+                    StringBuilder sb = new StringBuilder();
                     sb.Append("<table cellpadding='3' cellspacing='3'>");
-                    foreach (KeyValuePair<int, Connector> connector in chargePoint.Value.Connectors)
+
+                    sb.Append("<tr>");
+                    foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in MessageProcessor.CentralStation)
                     {
-                        string name = chargePoint.Value.ID + "_" + connector.Value.ID.ToString();
-
-                        sb.Append("<tr>");
-                        sb.Append("<td valign='top'>");
-                        sb.Append("<hr/>");
-                        sb.Append("<div id=\"" + name + "transactiontable\" width =\"380\"></div>");
-                        sb.Append("</td>");
-                        sb.Append("</tr>");
-
-                        sb.Append("<tr>");
-                        sb.Append("<td valign='top'>");
-                        sb.Append("<hr/>");
-                        sb.Append("<canvas id=\"" + name + "\" width=\"380\" height=\"200\"/>");
-                        sb.Append("</td>");
-                        sb.Append("</tr>");
+                        sb.Append("<th>");
+                        sb.Append("<b>" + chargePoint.Value.ID + "</b>");
+                        sb.Append("</th>");
                     }
+                    sb.Append("</tr>");
+
+                    sb.Append("<tr>");
+                    foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in MessageProcessor.CentralStation)
+                    {
+                        sb.Append("<td valign='top'>");
+                        sb.Append("<hr/>");
+                        sb.Append("<div id=\"" + chargePoint.Value.ID + "_statustable\" width=\"400\"/>");
+                        sb.Append("</td>");
+                    }
+                    sb.Append("</tr>");
+
+                    sb.Append("<tr>");
+                    foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in MessageProcessor.CentralStation)
+                    {
+                        sb.Append("<td valign='top'>");
+                        sb.Append("<table cellpadding='3' cellspacing='3'>");
+                        foreach (KeyValuePair<int, Connector> connector in chargePoint.Value.Connectors)
+                        {
+                            string name = chargePoint.Value.ID + "_" + connector.Value.ID.ToString();
+
+                            sb.Append("<tr>");
+                            sb.Append("<td valign='top'>");
+                            sb.Append("<hr/>");
+                            sb.Append("<div id=\"" + name + "_transactiontable\" width =\"380\"></div>");
+                            sb.Append("</td>");
+                            sb.Append("</tr>");
+
+                            sb.Append("<tr>");
+                            sb.Append("<td valign='top'>");
+                            sb.Append("<hr/>");
+                            sb.Append("<canvas id=\"" + name + "_chart\" width=\"380\" height=\"200\"/>");
+                            sb.Append("</td>");
+                            sb.Append("</tr>");
+                        }
+                        sb.Append("</table>");
+                        sb.Append("</td>");
+                    }
+                    sb.Append("</tr>");
+
                     sb.Append("</table>");
-                    sb.Append("</td>");
-                }
-                sb.Append("</tr>");
 
-                sb.Append("</table>");
+                    AddChargers(sb.ToString());
+                    Console.WriteLine($"Added HTML {sb}");
 
-                AddChargers(sb.ToString());
-
-                foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in CentralStation)
-                {
-                    // build status table of connectors
-                    List<string> status = new List<string>();
-
-                    foreach (KeyValuePair<int, Connector> connector in chargePoint.Value.Connectors)
+                    foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in MessageProcessor.CentralStation)
                     {
-                        status.Add(connector.Value.Status);
-                        string chartName = chargePoint.Value.ID + "_" + connector.Value.ID.ToString();
+                        // build status table of connectors
+                        List<string> status = new List<string>();
 
-                        // add chart
-                        AddChart(chartName);
-
-                        // update our line chart in the dashboard
-                        List<string> labels = new List<string>();
-                        List<float> readings = new List<float>();
-                        foreach (MeterReading reading in connector.Value.MeterReadings)
+                        foreach (KeyValuePair<int, Connector> connector in chargePoint.Value.Connectors)
                         {
-                            labels.Add(reading.Timestamp.ToString());
-                            readings.Add(reading.MeterValue);
-                        }
-                        AddDataToChart(chartName, labels.ToArray(), readings.ToArray());
+                            status.Add(connector.Value.Status);
 
-                        // add items to our transaction table
-                        List<Tuple<string, string, string, string, string>> tableEntries = new List<Tuple<string, string, string, string, string>>();
-
-                        foreach (KeyValuePair<int, Transaction> transaction in connector.Value.CurrentTransactions.ToArray())
-                        {
-                            if (transaction.Value.StopTime != DateTime.MinValue)
+                            // add chart
+                            List<string> labels = new List<string>();
+                            List<float> readings = new List<float>();
+                            foreach (MeterReading reading in connector.Value.MeterReadings)
                             {
-                                tableEntries.Add(new Tuple<string, string, string, string, string>(
-                                    transaction.Value.ID.ToString(),
-                                    transaction.Value.BadgeID,
-                                    transaction.Value.StartTime.ToString(),
-                                    transaction.Value.StopTime.ToString(),
-                                    (transaction.Value.MeterValueFinish - transaction.Value.MeterValueStart).ToString()
-                                ));
+                                labels.Add(reading.Timestamp.ToString());
+                                readings.Add(reading.MeterValue);
                             }
-                            else
+                            AddChart(chargePoint.Value.ID + "_" + connector.Value.ID.ToString() + "_chart", labels.ToArray(), readings.ToArray());
+
+                            // add items to our transaction table
+                            List<Tuple<string, string, string, string, string>> tableEntries = new List<Tuple<string, string, string, string, string>>();
+
+                            foreach (KeyValuePair<int, Transaction> transaction in connector.Value.CurrentTransactions)
                             {
-                                tableEntries.Add(new Tuple<string, string, string, string, string>(
-                                    transaction.Value.ID.ToString(),
-                                    transaction.Value.BadgeID,
-                                    transaction.Value.StartTime.ToString(),
-                                    "in progress",
-                                    string.Empty
-                                ));
+                                if (transaction.Value.StopTime != DateTime.MinValue)
+                                {
+                                    tableEntries.Add(new Tuple<string, string, string, string, string>(
+                                        transaction.Value.ID.ToString(),
+                                        transaction.Value.BadgeID,
+                                        transaction.Value.StartTime.ToString(),
+                                        transaction.Value.StopTime.ToString(),
+                                        (transaction.Value.MeterValueFinish - transaction.Value.MeterValueStart).ToString()
+                                    ));
+                                }
+                                else
+                                {
+                                    tableEntries.Add(new Tuple<string, string, string, string, string>(
+                                        transaction.Value.ID.ToString(),
+                                        transaction.Value.BadgeID,
+                                        transaction.Value.StartTime.ToString(),
+                                        "in progress",
+                                        string.Empty
+                                    ));
+                                }
                             }
+
+                            CreateTableForTransactions(chargePoint.Value.ID + "_" + connector.Value.ID.ToString() + "_transactiontable", tableEntries);
                         }
 
-                        CreateTableForTransactions(chargePoint.Value.ID + "_" + connector.Value.ID.ToString(), tableEntries);
+                        CreateTableForStatus(chargePoint.Value.ID + "_statustable", status);
                     }
-
-                    CreateTableForStatus(chargePoint.Value.ID, status);
                 }
+            }
+            finally
+            {
+                MessageProcessor.CentralStationLock.Release();
             }
         }
 
@@ -175,27 +174,11 @@ namespace OpcUaWebDashboard.Controllers
             }
         }
 
-        private static void AddChart(string name)
+        private static void AddChart(string name, string[] timestamps, float[] values)
         {
             if (_hubContext != null)
             {
-                _hubContext.Clients.All.SendAsync("addChart", name).GetAwaiter().GetResult();
-            }
-        }
-
-        private static void AddDataToChart(string name, string[] timestamps, float[] values)
-        {
-            if (_hubContext != null)
-            {
-                _hubContext.Clients.All.SendAsync("addDataToChart", name, timestamps, values).GetAwaiter().GetResult();
-            }
-        }
-
-        private static void ClearCharts()
-        {
-            if (_hubContext != null)
-            {
-                _hubContext.Clients.All.SendAsync("removeDataFromCharts").GetAwaiter().GetResult();
+                _hubContext.Clients.All.SendAsync("addChart", name, timestamps, values).GetAwaiter().GetResult();
             }
         }
 
@@ -230,7 +213,7 @@ namespace OpcUaWebDashboard.Controllers
 
                 sb.Append("</table>");
 
-                _hubContext.Clients.All.SendAsync("addTransactionTable", key, sb.ToString()).GetAwaiter().GetResult();
+                _hubContext.Clients.All.SendAsync("addTable", key, sb.ToString()).GetAwaiter().GetResult();
             }
         }
 
@@ -266,7 +249,7 @@ namespace OpcUaWebDashboard.Controllers
                 sb.Append("</table>");
 
                 _hubContext.Clients.All.SendAsync("availableStatus", key, connectorAvailable).GetAwaiter().GetResult();
-                _hubContext.Clients.All.SendAsync("addStatusTable", key, sb.ToString()).GetAwaiter().GetResult();
+                _hubContext.Clients.All.SendAsync("addTable", key, sb.ToString()).GetAwaiter().GetResult();
             }
         }
     }
