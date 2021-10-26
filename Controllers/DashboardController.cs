@@ -105,7 +105,6 @@ namespace OpcUaWebDashboard.Controllers
                     sb.Append("</table>");
 
                     AddChargers(sb.ToString());
-                    Console.WriteLine($"Added HTML {sb}");
 
                     foreach (KeyValuePair<string, OCPPChargePoint> chargePoint in MessageProcessor.CentralStation)
                     {
