@@ -1,0 +1,14 @@
+﻿
+
+@{
+    ViewBag.Title = "Microsoft EV Charging";
+}
+
+<p>
+    <div width="800">You will be notified via email once a charger becomes available.</div>
+</p>
+<br />
+<hr />
+<form method="post">
+    <input id="notify" type="submit" value="OK" asp-controller="Dashboard" asp-action="Index" />
+</form>

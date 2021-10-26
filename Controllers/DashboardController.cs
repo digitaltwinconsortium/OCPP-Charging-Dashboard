@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using OCPPCentralSystem.Schemas.DTDL;
@@ -16,12 +18,27 @@ namespace OpcUaWebDashboard.Controllers
     [Authorize]
     public class DashboardController : Controller
     {
+        private readonly UserManager<IdentityUser> _userManager;
+        
+        private readonly SignInManager<IdentityUser> _signInManager;
+        
+        private static IEmailSender _emailSender;
+        
         private static IHubContext<StatusHub> _hubContext;
 
         private static Timer _timer = new Timer(GenerateDashboard, null, -1, -1);
 
-        public DashboardController(IHubContext<StatusHub> hubContext)
+        private static List<string> _notificationList = new List<string>();
+
+        public DashboardController(
+            UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager,
+            IEmailSender emailSender,
+            IHubContext<StatusHub> hubContext)
         {
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _emailSender = emailSender;
             _hubContext = hubContext;
         }
 
@@ -34,12 +51,23 @@ namespace OpcUaWebDashboard.Controllers
         {
             _timer.Change(1000, 1000);
 
-            return View("Index");
+             return View("Index");
         }
 
         public ActionResult Notify()
         {
-            return View("Index");
+            IdentityUser user = _userManager.GetUserAsync(User).Result;
+            bool signedIn = _signInManager.IsSignedIn(User);
+
+            if ((user != null) && user.EmailConfirmed && signedIn)
+            {
+                _notificationList.Add(user.Email);
+                return View("Notification");
+            }
+            else
+            {
+                return View("Index");
+            }
         }
 
         private static void GenerateDashboard(Object state)
@@ -166,6 +194,16 @@ namespace OpcUaWebDashboard.Controllers
                         }
 
                         CreateTableForStatus(chargePoint.Value.ID + "_statustable", status);
+                    }
+
+                    if (chargerAvailable)
+                    {
+                        int numPeopleWaiting = _notificationList.Count;
+                        while (_notificationList.Count > 0)
+                        {
+                            _emailSender.SendEmailAsync(_notificationList[0], "Microsoft EV Charging", "A charger is now available and there are " + (numPeopleWaiting - 1).ToString() + " other people waiting and got notified.");
+                            _notificationList.RemoveAt(0);
+                        }
                     }
 
                     _hubContext.Clients.All.SendAsync("availableStatus", chargerAvailable).GetAwaiter().GetResult();
