@@ -32,7 +32,7 @@ namespace OpcUaWebDashboard.Controllers
 
         public ActionResult Index()
         {
-            _timer.Change(5000, 5000);
+            _timer.Change(500, 500);
 
             return View("Index");
         }
