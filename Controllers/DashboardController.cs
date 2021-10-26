@@ -51,17 +51,18 @@ namespace OpcUaWebDashboard.Controllers
         {
             _timer.Change(1000, 1000);
 
-             return View("Index");
+            return View("Index");
         }
 
         public ActionResult Notify()
         {
-            IdentityUser user = _userManager.GetUserAsync(User).Result;
+            IdentityUser user = _userManager.GetUserAsync(User).GetAwaiter().GetResult();
             bool signedIn = _signInManager.IsSignedIn(User);
 
             if ((user != null) && user.EmailConfirmed && signedIn)
             {
                 _notificationList.Add(user.Email);
+                Console.WriteLine("Added user " + user.Email + " to notification list.");
                 return View("Notification");
             }
             else
@@ -201,7 +202,11 @@ namespace OpcUaWebDashboard.Controllers
                         int numPeopleWaiting = _notificationList.Count;
                         while (_notificationList.Count > 0)
                         {
-                            _emailSender.SendEmailAsync(_notificationList[0], "Microsoft EV Charging", "A charger is now available and there are " + (numPeopleWaiting - 1).ToString() + " other people waiting and got notified.");
+                            _emailSender.SendEmailAsync(
+                                _notificationList[0],
+                                "Microsoft EV Charging", "A charger is now available and there are " + (numPeopleWaiting - 1).ToString() + " other people waiting and got notified.")
+                                .GetAwaiter().GetResult();
+                            Console.WriteLine("Sent notification email to " + _notificationList[0] + ".");
                             _notificationList.RemoveAt(0);
                         }
                     }
