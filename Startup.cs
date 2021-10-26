@@ -34,7 +34,7 @@ namespace EVCharging
 
             services.AddRazorPages();
 
-            services.AddSignalR();
+            services.AddSignalR().AddAzureSignalR(Configuration["SignalRConnectionString"]);
 
             services.AddTransient<IEmailSender, EmailSender>();
 
