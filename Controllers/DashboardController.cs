@@ -49,8 +49,8 @@ namespace OpcUaWebDashboard.Controllers
             {
                 if (MessageProcessor.CentralStation != null)
                 {
-                    // turn off timer
-                    _timer.Change(-1, -1);
+                    // slow down timer
+                    _timer.Change(15000, 15000);
 
                     StringBuilder sb = new StringBuilder();
                     sb.Append("<table cellpadding='3' cellspacing='3'>");
