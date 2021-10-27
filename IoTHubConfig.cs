@@ -5,7 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpcUaWebDashboard
+namespace EVCharging
 {
     public class IoTHubConfig
     {

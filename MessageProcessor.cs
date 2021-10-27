@@ -1,7 +1,7 @@
 ﻿using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Newtonsoft.Json;
-using OCPPCentralSystem.Schemas.DTDL;
+using OCPPCentralSystem.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,11 +10,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpcUaWebDashboard
+namespace EVCharging
 {
-    /// <summary>
-    /// This class processes all ingested data into IoTHub.
-    /// </summary>
     public class MessageProcessor : IEventProcessor
     {
         public static ConcurrentDictionary<string, OCPPChargePoint> CentralStation { get; set; }
@@ -49,7 +46,6 @@ namespace OpcUaWebDashboard
             }
         }
 
-
         private void Checkpoint(PartitionContext context, Stopwatch checkpointStopwatch)
         {
             context.CheckpointAsync();
@@ -57,9 +53,6 @@ namespace OpcUaWebDashboard
             Console.WriteLine($"checkpoint completed at {DateTime.UtcNow}");
         }
 
-        /// <summary>
-        /// Process all events from OPC UA servers and update the last value of each node in the topology.
-        /// </summary>
         public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> ingestedMessages)
         {
             // checkpoint, so that the processor does not need to start from the beginning if it restarts

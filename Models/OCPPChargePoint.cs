@@ -6,7 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace OCPPCentralSystem.Schemas.DTDL
+namespace OCPPCentralSystem.Models
 {
     public class OCPPChargePoint
     {

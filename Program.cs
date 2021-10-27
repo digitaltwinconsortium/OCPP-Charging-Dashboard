@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using OpcUaWebDashboard;
 
 namespace EVCharging
 {
@@ -8,7 +7,10 @@ namespace EVCharging
     {
         public static void Main(string[] args)
         {
+            // start reading messages from IoT Hub
             IoTHubConfig.ConfigureIotHub();
+
+            // start our web server
             CreateHostBuilder(args).Build().Run();
         }
 

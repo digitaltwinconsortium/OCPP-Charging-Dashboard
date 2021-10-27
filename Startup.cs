@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using OpcUaWebDashboard.Controllers;
 
 namespace EVCharging
 {
@@ -38,12 +37,14 @@ namespace EVCharging
 
             services.AddTransient<IEmailSender, EmailSender>();
 
+            services.AddSingleton<IHtmlContentGenerator, HtmlContentGenerator>();
+
             services.AddAuthentication();
 
             services.AddAuthorization();
 
             services.AddDataProtection()
-                    .PersistKeysToAzureBlobStorage(Configuration["StorageAccountConnectionString"], "keys", "keys");
+                .PersistKeysToAzureBlobStorage(Configuration["StorageAccountConnectionString"], "keys", "keys");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
