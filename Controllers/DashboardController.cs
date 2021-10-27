@@ -85,6 +85,7 @@ namespace OpcUaWebDashboard.Controllers
                 if (!_badgeClaims.ContainsKey(badgeId))
                 {
                     _badgeClaims.Add(badgeId, user.Email);
+                    Console.WriteLine("Added user " + user.Email + " to badge claim list.");
                 }
 
                 return View("Claim", new ClaimModel { BadgeId = badgeId });
