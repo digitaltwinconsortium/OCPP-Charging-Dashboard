@@ -203,7 +203,7 @@ namespace OpcUaWebDashboard.Controllers
                                             _badgeClaims[transaction.Value.BadgeID],
                                             "Microsoft EV Charging", "Your vehicle charging from " + transaction.Value.StartTime.ToString() + " is now complete. Please move your vehicle.")
                                             .GetAwaiter().GetResult();
-                                                    Console.WriteLine("Sent charging complete notification email to " + _badgeClaims[transaction.Value.BadgeID] + ".");
+                                         Console.WriteLine("Sent charging complete notification email to " + _badgeClaims[transaction.Value.BadgeID] + ".");
                                         _badgeClaims.Remove(transaction.Value.BadgeID);
                                     }
 
