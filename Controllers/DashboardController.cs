@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using EVCharging.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -19,16 +20,18 @@ namespace OpcUaWebDashboard.Controllers
     public class DashboardController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
-        
+
         private readonly SignInManager<IdentityUser> _signInManager;
-        
+
         private static IEmailSender _emailSender;
-        
+
         private static IHubContext<StatusHub> _hubContext;
 
         private static Timer _timer = new Timer(GenerateDashboard, null, -1, -1);
 
         private static List<string> _notificationList = new List<string>();
+
+        private static Dictionary<string, string> _badgeClaims = new Dictionary<string, string>();
 
         public DashboardController(
             UserManager<IdentityUser> userManager,
@@ -49,7 +52,7 @@ namespace OpcUaWebDashboard.Controllers
 
         public ActionResult Index()
         {
-            _timer.Change(1000, 1000);
+            _timer.Change(2000, 2000);
 
             return View("Index");
         }
@@ -63,6 +66,7 @@ namespace OpcUaWebDashboard.Controllers
             {
                 _notificationList.Add(user.Email);
                 Console.WriteLine("Added user " + user.Email + " to notification list.");
+
                 return View("Notification");
             }
             else
@@ -71,7 +75,27 @@ namespace OpcUaWebDashboard.Controllers
             }
         }
 
-        private static void GenerateDashboard(Object state)
+        public ActionResult ClaimBadge(string badgeId)
+        {
+            IdentityUser user = _userManager.GetUserAsync(User).GetAwaiter().GetResult();
+            bool signedIn = _signInManager.IsSignedIn(User);
+
+            if ((user != null) && user.EmailConfirmed && signedIn)
+            {
+                if (!_badgeClaims.ContainsKey(badgeId))
+                {
+                    _badgeClaims.Add(badgeId, user.Email);
+                }
+
+                return View("Claim", new ClaimModel { BadgeId = badgeId });
+            }
+            else
+            {
+                return View("Index");
+            }
+        }
+
+        private static void GenerateDashboard(object state)
         {
             MessageProcessor.CentralStationLock.Wait();
             try
@@ -154,7 +178,7 @@ namespace OpcUaWebDashboard.Controllers
                                 chargerAvailable = true;
                             }
 
-                            // add chart
+                            // add meter readings chart
                             List<string> labels = new List<string>();
                             List<float> readings = new List<float>();
                             foreach (MeterReading reading in connector.Value.MeterReadings)
@@ -171,13 +195,37 @@ namespace OpcUaWebDashboard.Controllers
                             {
                                 if (transaction.Value.StopTime != DateTime.MinValue)
                                 {
-                                    tableEntries.Add(new Tuple<string, string, string, string, string>(
-                                        transaction.Value.ID.ToString(),
-                                        transaction.Value.BadgeID,
-                                        transaction.Value.StartTime.ToString(),
-                                        transaction.Value.StopTime.ToString(),
-                                        (transaction.Value.MeterValueFinish - transaction.Value.MeterValueStart).ToString()
-                                    ));
+                                    // notify users that have claimed this transaction
+                                    if (_badgeClaims.ContainsKey(transaction.Value.BadgeID))
+                                    {
+                                        _emailSender.SendEmailAsync(
+                                            _badgeClaims[transaction.Value.BadgeID],
+                                            "Microsoft EV Charging", "Your vehicle charging from " + transaction.Value.StartTime.ToString() + " is now complete. Please move your vehicle.")
+                                            .GetAwaiter().GetResult();
+                                                    Console.WriteLine("Sent charging complete notification email to " + _badgeClaims[transaction.Value.BadgeID] + ".");
+                                        _badgeClaims.Remove(transaction.Value.BadgeID);
+                                    }
+
+                                    if (connector.Value.MeterReadings.Count > 0)
+                                    {
+                                        tableEntries.Add(new Tuple<string, string, string, string, string>(
+                                            transaction.Value.ID.ToString(),
+                                            transaction.Value.BadgeID,
+                                            transaction.Value.StartTime.ToString(),
+                                            transaction.Value.StopTime.ToString(),
+                                            (transaction.Value.MeterValueFinish - transaction.Value.MeterValueStart).ToString() + " " + connector.Value.MeterReadings[0].MeterValueUnit
+                                        ));
+                                    }
+                                    else
+                                    {
+                                        tableEntries.Add(new Tuple<string, string, string, string, string>(
+                                            transaction.Value.ID.ToString(),
+                                            transaction.Value.BadgeID,
+                                            transaction.Value.StartTime.ToString(),
+                                            transaction.Value.StopTime.ToString(),
+                                            (transaction.Value.MeterValueFinish - transaction.Value.MeterValueStart).ToString()
+                                        ));
+                                    }
                                 }
                                 else
                                 {
@@ -206,7 +254,7 @@ namespace OpcUaWebDashboard.Controllers
                                 _notificationList[0],
                                 "Microsoft EV Charging", "A charger is now available and there are " + (numPeopleWaiting - 1).ToString() + " other people waiting and got notified.")
                                 .GetAwaiter().GetResult();
-                            Console.WriteLine("Sent notification email to " + _notificationList[0] + ".");
+                            Console.WriteLine("Sent charger available notification email to " + _notificationList[0] + ".");
                             _notificationList.RemoveAt(0);
                         }
                     }
@@ -250,7 +298,7 @@ namespace OpcUaWebDashboard.Controllers
                 sb.Append("<th><b>Badge</b></th>");
                 sb.Append("<th><b>Start Time</b></th>");
                 sb.Append("<th><b>Stop Time</b></th>");
-                sb.Append("<th><b>Used Power (Wh)</b></th>");
+                sb.Append("<th><b>Used Power</b></th>");
                 sb.Append("</tr>");
 
                 // rows
@@ -258,7 +306,7 @@ namespace OpcUaWebDashboard.Controllers
                 {
                     sb.Append("<tr>");
                     sb.Append("<td style='width:200px'>" + item.Item1 + "</td>");
-                    sb.Append("<td style='width:200px'>" + item.Item2 + "</td>");
+                    sb.Append("<td style='width:200px'>" + item.Item2 + "<a href='/Dashboard/ClaimBadge?badgeId=" + item.Item2 + "'> Claim</a></td>");
                     sb.Append("<td style='width:200px'>" + item.Item3 + "</td>");
                     sb.Append("<td style='width:200px'>" + item.Item4 + "</td>");
                     sb.Append("<td style='width:200px'>" + item.Item5 + "</td>");

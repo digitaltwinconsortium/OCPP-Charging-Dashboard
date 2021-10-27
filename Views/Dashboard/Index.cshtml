@@ -1,4 +1,4 @@
-﻿
+﻿@model EVCharging.Models.ClaimModel
 
 @{
     ViewBag.Title = "Microsoft EV Charging";
@@ -10,7 +10,7 @@
 <br />
 <hr />
 <form method="post">
-    <input id="notify" type="submit" value="Notify me when a charger becomes available" asp-controller="Dashboard" asp-action="Notify" />
+    <input id="notify" type="submit" class="btn btn-primary" value="Notify me when a charger becomes available" asp-controller="Dashboard" asp-action="Notify" />
 </form>
 <br />
 <hr />

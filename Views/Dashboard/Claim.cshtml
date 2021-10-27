@@ -1,0 +1,16 @@
+﻿@model EVCharging.Models.ClaimModel
+
+@{
+    ViewBag.Title = "Microsoft EV Charging";
+}
+
+<p>
+    <div width="800">You have claimed the following badge as being yours and will be notified via email once the charging process associated with it is complete:</div>
+</p>
+@Html.Label(Model.BadgeId)
+
+<br />
+<hr />
+<form method="post">
+    <input id="notify" type="submit" class="btn btn-primary" value="OK" asp-controller="Dashboard" asp-action="Index" />
+</form>

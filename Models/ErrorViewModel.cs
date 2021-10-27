@@ -1,5 +1,3 @@
-using System;
-
 namespace EVCharging.Models
 {
     public class ErrorViewModel
