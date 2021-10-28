@@ -196,6 +196,8 @@ namespace EVCharging
                     }
 
                     _hub.AvailableStatus(chargerAvailable);
+
+                    Console.WriteLine("Charger available: " + chargerAvailable.ToString() + " Notification list length: " + NotificationList.Count.ToString() + " BadgeClaims list length: " + BadgeClaims.Count.ToString());
                 }
             }
             finally
@@ -261,6 +263,5 @@ namespace EVCharging
 
             _hub.AddTable(key, sb.ToString());
         }
-
     }
 }
