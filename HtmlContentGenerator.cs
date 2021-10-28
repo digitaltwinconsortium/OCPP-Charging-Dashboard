@@ -29,6 +29,8 @@ namespace EVCharging
             NotificationList = new List<string>();
 
             _timer = new Timer(GenerateDashboard, null, 2000, 2000);
+
+            Console.WriteLine("Content Generator started.");
         }
 
         private void GenerateDashboard(object state)
@@ -38,6 +40,8 @@ namespace EVCharging
             {
                 if (MessageProcessor.CentralStation != null)
                 {
+                    Console.WriteLine("Generating content...");
+
                     // slow down timer
                     _timer.Change(15000, 15000);
 
@@ -199,6 +203,10 @@ namespace EVCharging
 
                     Console.WriteLine("Charger available: " + chargerAvailable.ToString() + " Notification list length: " + NotificationList.Count.ToString() + " BadgeClaims list length: " + BadgeClaims.Count.ToString());
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
             finally
             {
