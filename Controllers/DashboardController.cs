@@ -32,7 +32,7 @@ namespace EVCharging.Controllers
 
         public ActionResult Index()
         {
-            _generator.SignalRTimer.Change(1000, 1000);
+            _generator.SignalRTimer.Change(2000, 2000);
 
             return View("Index");
         }
