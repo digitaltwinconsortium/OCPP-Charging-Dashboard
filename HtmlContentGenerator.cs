@@ -14,7 +14,7 @@ namespace EVCharging
 
         public Dictionary<string, string> BadgeClaims { get; set; }
 
-        private Timer _timer;
+        public Timer SignalRTimer { get; set; }
 
         private IEmailSender _emailSender;
 
@@ -28,7 +28,7 @@ namespace EVCharging
             BadgeClaims = new Dictionary<string, string>();
             NotificationList = new List<string>();
 
-            _timer = new Timer(GenerateDashboard, null, 2000, 2000);
+            SignalRTimer = new Timer(GenerateDashboard, null, 2000, 2000);
 
             Console.WriteLine("Content Generator started.");
         }
@@ -43,7 +43,7 @@ namespace EVCharging
                     Console.WriteLine("Generating content...");
 
                     // slow down timer
-                    _timer.Change(15000, 15000);
+                    SignalRTimer.Change(15000, 15000);
 
                     StringBuilder sb = new StringBuilder();
                     sb.Append("<table cellpadding='3' cellspacing='3'>");

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace EVCharging
 {
@@ -7,5 +8,7 @@ namespace EVCharging
         List<string> NotificationList { get; set; }
 
         Dictionary<string, string> BadgeClaims { get; set; }
+
+        Timer SignalRTimer { get; set; }
     }
 }
