@@ -10,7 +10,7 @@ The EV Charging Dashboard can be run from a Docker-enabled PC via:
 
     docker run -p 80:80 -e <env variables described below> ghcr.io/barnstee/evchargingdashboard:main
     
-Then point your browser to https://<youridaddress>.
+Then point your browser to 'https://<youridaddress>'.
 
 To run the EV Charging Dashboard on Azure, deploy it in a Web App with Docker instance and also deploy a SQL Server instance, an Azure Storage instance, an IoT Hub instance, a SendGrid instance and a SignalR instance. Then configure the environment variables below in the Web App's configuration Application Settings.
 
