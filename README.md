@@ -16,6 +16,8 @@ To run the EV Charging Dashboard on Azure, deploy it in a Web App with Docker in
 
 ## Configuration Settings
 
+The EV Charging Dashboard depends on a deployed S1 Azure IoT Hub, a deployed instance of Azure SignalR, a deployed Azure SQL instance, a deployed Azure Storage instance and a deployed SendGrid instance. Once deployed, create a blob container within the Azure Storage instance called "keys". Also, create a consumer group within the IoT Hub instace called "dashboard". Then deploy the EV charging dashboard as an Azure Web App.
+
 The following environment variables need to be defined:
 * "MyDBConnection": Azure SQL Server connection string
 * "StorageAccountConnectionString": Azure Storage connection string
