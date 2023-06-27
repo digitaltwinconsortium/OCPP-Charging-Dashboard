@@ -1,4 +1,4 @@
-# EV Charging Dashboard
+# OCPP Charging Dashboard
 
 A dockerized Azure Webapp for displaying Electric Vehicle charing station status, following the OCPP standard data model. It can be deployed in as a Docker container into an Azure Web App instance. Containers are automaticLly built on checkin to the main branch and can be run using the Docker run command. They are located at ghcr.io/barnstee/evchargingdashboard:main.
 
